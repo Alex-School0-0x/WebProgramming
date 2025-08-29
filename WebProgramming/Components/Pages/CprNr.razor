@@ -49,24 +49,33 @@
 
     private async Task btnSubmitCpr_clicked()
     {
-        var matchedUser = _toDoContext.Cprs.FirstOrDefault(x => x.User == _userName);
-        if (matchedUser == null)
+        try
         {
-            var cpr = new Data.Cpr
+            var matchedUser = _toDoContext.Cprs.FirstOrDefault(x => x.User == _userName);
+            if (matchedUser == null)
             {
-                User = _userName,
-                CprNr = _hashingHandler.BCryptHashing2(CprNrUserInput)
-            };
-            _toDoContext.Cprs.Add(cpr);
-            _toDoContext.SaveChanges();
+                var cpr = new Data.Cpr
+                {
+                    User = _userName,
+                    CprNr = _hashingHandler.BCryptHashing2(CprNrUserInput)
+                };
+                _toDoContext.Cprs.Add(cpr);
+                _toDoContext.SaveChanges();
+            }
+
+            matchedUser = _toDoContext.Cprs.FirstOrDefault(x => x.User == _userName);
+            bool hashedValueMatch = _hashingHandler.BCryptVerifyHashing2(CprNrUserInput, matchedUser.CprNr);
+
+            if (hashedValueMatch)
+                _navigationManager.NavigateTo("/TodoList");
+            else
+                _cprErrorMessage = "Cpr-nr er forkert!";
+
         }
-
-        matchedUser = _toDoContext.Cprs.FirstOrDefault(x => x.User == _userName);
-        bool hashedValueMatch = _hashingHandler.BCryptVerifyHashing2(CprNrUserInput, matchedUser.CprNr);
-
-        if (hashedValueMatch)
-            _navigationManager.NavigateTo("/TodoList");
-        else
-            _cprErrorMessage = "Cpr-nr er forkert!";
+        catch (Exception ex)
+        {
+            _cprErrorMessage = ex.Message;
+            return;
+        }
     }
 }

@@ -12,7 +12,7 @@ public class AsymetricEncryption
     {
         if (File.Exists("KeyPair.txt"))
         {
-            string[] keys = File.ReadAllLines("KeyPair.txt");
+            string[] keys = File.ReadAllText("KeyPair.txt").Split("-----SPLIT HERE-----");
             _privateKey = keys[0];
             _publicKey = keys[1];
         }
@@ -29,7 +29,7 @@ public class AsymetricEncryption
                              Convert.ToBase64String(publicKeyBytes, Base64FormattingOptions.InsertLineBreaks) +
                              "\n-----END PUBLIC KEY-----";
             }
-            File.WriteAllLines("KeyPair.txt", new string[] { _privateKey, _publicKey });
+            File.WriteAllLines("KeyPair.txt", [_privateKey, "-----SPLIT HERE-----", _publicKey]);
         }
 
     }
@@ -52,5 +52,29 @@ public class AsymetricEncryption
 
             return decryptedDataAsString;
         }
+    }
+
+    public async Task<string> EncryptAsymetric_webApi(string dataToEncrypt)
+    {
+        string? responseMessage = null;
+
+        string[] ar = [_publicKey, dataToEncrypt];
+        string arSerialized = Newtonsoft.Json.JsonConvert.SerializeObject(ar);
+        StringContent sc = new StringContent(
+            arSerialized,
+            System.Text.Encoding.UTF8,
+            "application/json"
+        );
+
+        using (HttpClient _httpClient = new HttpClient())
+        {
+            var response = await _httpClient.PostAsync(
+                "https://localhost:7117/encryptor",
+                sc
+            );
+            responseMessage = response.Content.ReadAsStringAsync().Result;
+        }
+
+        return responseMessage;
     }
 }

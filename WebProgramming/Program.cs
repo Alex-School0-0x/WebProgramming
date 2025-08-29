@@ -49,13 +49,6 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("Admin"));
 });
 
-builder.WebHost.UseKestrel((context, serverOptions) =>
-{
-    serverOptions.Configure(context.Configuration.GetSection("Kestral")).Endpoint("HTTPS", listenOptions =>
-    {
-        listenOptions.HttpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls13;
-    });
-});
 
 string kestralCertUrl = builder.Configuration.GetValue<string>("KestrelCertUrl")
     .Replace("%USERPROFILE%", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
@@ -63,6 +56,17 @@ string kestralCertPassword = builder.Configuration.GetValue<string>("KestrelCert
 
 builder.Configuration.GetSection("Kestrel:Endpoints:Https:Certificate:Path").Value = kestralCertUrl;
 builder.Configuration.GetSection("Kestrel:Endpoints:Https:Certificate:Password").Value = kestralCertPassword;
+
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.ConfigureHttpsDefaults(httpsOptions =>
+    {
+        httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls13;
+    });
+    serverOptions.Configure(builder.Configuration.GetSection("Kestrel"));
+}).UseKestrel(options => { });
+
+
 
 builder.Services.AddScoped<HashingHandler>();
 builder.Services.AddScoped<SymetricEncryption>();

@@ -1,8 +1,8 @@
 ﻿@page "/"
 @inject AuthenticationStateProvider authenticationStateProvider
 @inject Codes.HashingHandler _hashingHandler
+@inject NavigationManager _navigationManager
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AuthenticatedUser")]
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "RequireAdminRole")]
 
 
 <PageTitle>Home</PageTitle>
@@ -11,35 +11,10 @@
 
 Welcome to your new app.
 
-<AuthorizeView>
-    <Authorized>
-        <p>You are logged in.</p>
-        @if (_isAdmin)
-        {
-            <p>You have admin privileges.</p>
-        }
-        else
-        {
-            <p>You are a regular user.</p>
-        }
-    </Authorized>
-    <NotAuthorized>
-        <p>You are not authorized to view this content.</p>
-    </NotAuthorized>
-</AuthorizeView>
-@if (_testHashing)
-{
-    <div>
-        <h3>Hashing Test</h3>
-        <p>Original String: "TestString"</p>
-        <p>Hashed String: "@_hashingHandler.BCryptHashing2("TestString")"</p>
-    </div>
-}
+
 
 @code {
     private bool _isAuthenticated;
-    private bool _isAdmin;
-    private bool _testHashing;
 
 
     protected override async Task OnInitializedAsync()
@@ -47,7 +22,15 @@ Welcome to your new app.
         var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         _isAuthenticated = user.Identity?.IsAuthenticated ?? false;
-        _isAdmin = user.IsInRole("Admin");
-        _testHashing = _hashingHandler.BCryptVerifyHashing2("TestString", _hashingHandler.BCryptHashing2("TestString"));
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool boolean)
+    {
+        await base.OnAfterRenderAsync(boolean);
+        var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity.IsAuthenticated)
+            _navigationManager.NavigateTo("/CprNr");
     }
 }

@@ -35,7 +35,7 @@
                     @foreach (var item in _TodoListObj)
                     {
                         <tr>
-                            <td>@item.Item</td>
+                            <td>@_asymetricEncryption.DecryptAsymetric(item.Item)</td>
                             <td>
                                 @if (item.IsDone)
                                 {
@@ -73,11 +73,11 @@
             _TodoListObj = _toDoContext.TodoItems.Where(x => x.UserId == todoDbUser.Id).ToList();
     }
 
-    private void btnSubmitTodoItem_clicked()
+    private async Task btnSubmitTodoItem_clicked()
     {
         var logInUserId = _toDoContext.Cprs.FirstOrDefault(x => x.User == _userName).Id;
 
-        var todo = new Data.Todolist { UserId = logInUserId, Item = _toDoItem, IsDone = false };
+        var todo = new Data.Todolist { UserId = logInUserId, Item = await _asymetricEncryption.EncryptAsymetric_webApi(_toDoItem), IsDone = false };
         _toDoContext.TodoItems.Add(todo);
         _toDoContext.SaveChanges();
 

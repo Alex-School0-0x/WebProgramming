@@ -5,7 +5,7 @@ namespace WebProgramming.Data
     public class TodoDbContext(DbContextOptions<TodoDbContext> options) : DbContext(options)
     {
         public DbSet<Todolist> TodoItems => Set<Todolist>();
-        public DbSet<Cpr> CprItems => Set<Cpr>();
+        public DbSet<Cpr> Cprs => Set<Cpr>();
 
 
         override protected void OnModelCreating(ModelBuilder modelBuilder)
