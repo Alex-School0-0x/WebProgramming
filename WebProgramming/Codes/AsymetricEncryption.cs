@@ -10,17 +10,26 @@ public class AsymetricEncryption
 
     public AsymetricEncryption()
     {
-        
-        using (RSA rsa = RSA.Create(2048))
+        if (File.Exists("KeyPair.txt"))
         {
-            byte[] privateKeyBytes = rsa.ExportRSAPrivateKey();
-            _privateKey = "-----BEGIN PRIVATE KEY-----\n" +
-                          Convert.ToBase64String(privateKeyBytes, Base64FormattingOptions.InsertLineBreaks) +
-                          "\n-----END PRIVATE KEY-----";
-            byte[] publicKeyBytes = rsa.ExportSubjectPublicKeyInfo();
-            _publicKey = "-----BEGIN PUBLIC KEY-----\n" +
-                         Convert.ToBase64String(publicKeyBytes, Base64FormattingOptions.InsertLineBreaks) +
-                         "\n-----END PUBLIC KEY-----";
+            string[] keys = File.ReadAllLines("KeyPair.txt");
+            _privateKey = keys[0];
+            _publicKey = keys[1];
+        }
+        else
+        {
+            using (RSA rsa = RSA.Create(2048))
+            {
+                byte[] privateKeyBytes = rsa.ExportRSAPrivateKey();
+                _privateKey = "-----BEGIN PRIVATE KEY-----\n" +
+                              Convert.ToBase64String(privateKeyBytes, Base64FormattingOptions.InsertLineBreaks) +
+                              "\n-----END PRIVATE KEY-----";
+                byte[] publicKeyBytes = rsa.ExportSubjectPublicKeyInfo();
+                _publicKey = "-----BEGIN PUBLIC KEY-----\n" +
+                             Convert.ToBase64String(publicKeyBytes, Base64FormattingOptions.InsertLineBreaks) +
+                             "\n-----END PUBLIC KEY-----";
+            }
+            File.WriteAllLines("KeyPair.txt", new string[] { _privateKey, _publicKey });
         }
 
     }
