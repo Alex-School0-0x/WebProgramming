@@ -1,0 +1,93 @@
+﻿@page "/TodoList"
+@using WebProgramming.Data
+
+@inject Data.TodoDbContext _toDoContext;
+@inject AuthenticationStateProvider _authenticationStateProvider;
+@inject NavigationManager _navigationManager;
+@inject Codes.AsymetricEncryption _asymetricEncryption;
+
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "AuthenticatedUser")]
+
+<h2 style="margin-top:20px;text-decoration:underline;">To do list</h2>
+<div class="row" style="margin-top:40px;">
+    <div class="col-md-6" style="text-align:right;">
+        Add to-do item:
+    </div>
+    <div class="col-md-6" style="text-align:left;">
+        <input type="text" @bind="_toDoItem" style="width:150px;" />
+        <br />
+        <button class="btn-primary" @onclick="btnSubmitTodoItem_clicked" style="width:150px;height:45px;margin-top:4px;">Submit</button>
+    </div>
+</div>
+
+<div style="width:80%;margin-top:18px;margin:0 auto;text-align:left;">
+    @if (_TodoListObj != null && _TodoListObj.Count > 0)
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>My to do items</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_TodoListObj != null && _TodoListObj.Count > 0)
+                {
+                    @foreach (var item in _TodoListObj)
+                    {
+                        <tr>
+                            <td>@item.Item</td>
+                            <td>
+                                @if (item.IsDone)
+                                {
+                                    <button style="border:none;background-color:transparent;" @onclick="() => ToggleIsDone(item)">
+                                        <span style="color:green;font-weight:bold;">Done</span>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button style="border:none;background-color:transparent;" @onclick="() => ToggleIsDone(item)">
+                                        <span style="color:red;font-weight:bold;">Not done</span>
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private string? _toDoItem;
+    private string? _userName;
+    private List<Todolist>? _TodoListObj = new List<Todolist>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        _userName = authState.User.Identity.Name;
+
+        var todoDbUser = _toDoContext.Cprs.FirstOrDefault(x => x.User == _userName);
+        if (todoDbUser != null)
+            _TodoListObj = _toDoContext.TodoItems.Where(x => x.UserId == todoDbUser.Id).ToList();
+    }
+
+    private void btnSubmitTodoItem_clicked()
+    {
+        var logInUserId = _toDoContext.Cprs.FirstOrDefault(x => x.User == _userName).Id;
+
+        var todo = new Data.Todolist { UserId = logInUserId, Item = _toDoItem, IsDone = false };
+        _toDoContext.TodoItems.Add(todo);
+        _toDoContext.SaveChanges();
+
+        _TodoListObj = _toDoContext.TodoItems.Where(x => x.UserId == logInUserId).ToList();
+    }
+
+    private void ToggleIsDone(Todolist todoitem)
+    {
+        todoitem.IsDone = !todoitem.IsDone;
+        _toDoContext.TodoItems.Update(todoitem);
+        _toDoContext.SaveChanges();
+    }
+}

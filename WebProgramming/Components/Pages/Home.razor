@@ -27,10 +27,19 @@ Welcome to your new app.
         <p>You are not authorized to view this content.</p>
     </NotAuthorized>
 </AuthorizeView>
+@if (_testHashing)
+{
+    <div>
+        <h3>Hashing Test</h3>
+        <p>Original String: "TestString"</p>
+        <p>Hashed String: "@_hashingHandler.BCryptHashing2("TestString")"</p>
+    </div>
+}
 
 @code {
     private bool _isAuthenticated;
     private bool _isAdmin;
+    private bool _testHashing;
 
 
     protected override async Task OnInitializedAsync()
@@ -39,5 +48,6 @@ Welcome to your new app.
         var user = authState.User;
         _isAuthenticated = user.Identity?.IsAuthenticated ?? false;
         _isAdmin = user.IsInRole("Admin");
+        _testHashing = _hashingHandler.BCryptVerifyHashing2("TestString", _hashingHandler.BCryptHashing2("TestString"));
     }
 }
